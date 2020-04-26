@@ -4,6 +4,8 @@
 
 use App\Model\Category\Category;
 use App\Model\Listing\Listing;
+use App\Model\Listing\Ratings;
+use App\Model\Listing\Reviews;
 use App\User;
 use Faker\Generator as Faker;
 use Illuminate\Support\Facades\Hash;
@@ -40,8 +42,27 @@ $factory->define(Listing::class, function (Faker $faker) {
 
 $factory->define(Category::class, function (Faker $faker) {
     return [
-        'name' => $faker->sentence(2, false),
+        'name' => $faker->unique()->sentence(2, false),
         'slug' => $faker->slug,
         'parent_id' => rand(100, 1720)
+    ];
+});
+
+$factory->define(Ratings::class, function (Faker $faker) {
+    static $number = 1;
+    return [
+        'rating_value' => $faker->unique()->sentence(2, false),
+        'listing_id' => rand(2,1000),
+        'rating_by' => $number++,
+        'rating_value' => mt_rand(0,50) / 10
+    ];
+});
+
+$factory->define(Reviews::class, function (Faker $faker) {
+    static $number = 1;
+    return [
+        'comments' => $faker->realText($maxNbChars = rand(50,200), $indexSize = 2),
+        'listing_id' => rand(2,1000),
+        'review_by' => rand(2,1000),
     ];
 });

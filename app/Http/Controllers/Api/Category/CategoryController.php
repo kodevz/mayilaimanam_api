@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Model\Category\Category;
 use App\Repositories\Category\CategoryRepositoryInterface;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Kodevz\MolyDatatable\Facades\MolyDataTable;
 
 class CategoryController extends Controller
 {
@@ -45,6 +48,8 @@ class CategoryController extends Controller
     {
         return $this->category->find($id);
     }
+    
+    
 
     /**
      * Create new category
@@ -54,20 +59,45 @@ class CategoryController extends Controller
      */
     public function create(Request $request)
     {
+        $validate = $request->validate([
+            'name' => 'required|unique:categories|max:75',
+            'icon_url' => 'required',
+            'image_url' => 'required',
+        ]);
+        
         $category = Category::where('name', $request['name'])->get();
     
         if (count($category)) {
             return [
-                'message' => "This category [{$request['name']}] already exist."
+                'violations' => $validate->errors
             ];
         }
 
-        $cateogry = Category::create($request->all());
+        $category = new Category();
+        
+        $category->name = $request['name'];
+        $category->slug = Str::slug($request['name'], '_');
+        $category->icon_url = null;
+
+        if ($request->file('icon_url')) {
+            $category->icon_url = $request->file('icon_url')->store('public/uploads/category/icons');
+        }
+        if ($request->file('image_url')) {
+            $category->image_url = $request->file('image_url')->store('public/uploads/category/images');
+        }
+
+        $category->save();
+
+        if ($request->get('parent_id') == 'true') {
+            $category->parent_id = $category->id;
+            $category->save();
+        }
+        
 
         return [
             'message' =>  'New category added successfully',
             'data' => [
-                $cateogry
+                $category
             ]
         ];
     }
@@ -79,11 +109,20 @@ class CategoryController extends Controller
      * @param int $id
      * @return void
      */
-    public function update(Request $request, int $id) : array
+    public function update(Request $request, int $id)
     {
         $category = Category::findOrFail($id);
         
-        $category->update($request->all());
+        $category->name = $request['name'];
+         if ($request->file('icon_url')) {
+            $category->icon_url = $request->file('icon_url')->store('public/uploads/category/icons');
+        }
+
+        if ($request->file('image_url')) {
+            $category->image_url = $request->file('image_url')->store('public/uploads/category/images');
+        }
+
+        $category->save();
         
         return $category;
     }
@@ -111,18 +150,16 @@ class CategoryController extends Controller
      */
     public function showCategories(Request $request, int $id = null)
     {   
-        $category = Category::with('childCategories.listing','relevantCategories');
         
-        if ($id) {
-            return $category->find($id);
-        }
+        $category = Category::with('childCategories.listing','relevantCategories');
 
-        if ($request->has('start') && $request->has('end')) {
-            return $category->skip($request['start'])->limit($request['end'])->get();
-        }
+        $paginator = MolyDataTable::create($category)->opJson();
 
-        return Category::with('childCategories.listing','relevantCategories')->get();
+       
+        return $paginator;
+
     }
+
 
     /**
      * Show child and relevant categories
@@ -134,4 +171,22 @@ class CategoryController extends Controller
     {
         return Category::with('childCategories','relevantCategories', 'listing')->find($id);
     }
+
+
+    public function searchCategory(Request $request)
+    {
+        $search = $request->get('search');
+        if (!$search) {
+            return [];
+        }
+        return Category::where('name', 'Like', "%$search%")
+                        ->take(50)->get();
+    }
+
+    public function parentCategories(Request $request)
+    {
+         return Category::where('parent_id', null)
+                        ->get();
+    }
+
 }

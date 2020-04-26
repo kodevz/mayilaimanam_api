@@ -4,6 +4,7 @@ namespace App\Model\Category;
 
 use App\Model\Listing\OpeningTimes;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\App;
 
 class CategoryListingView extends Model
 {
@@ -25,5 +26,11 @@ class CategoryListingView extends Model
     public function relevantCategories()
     {
         return $this->hasMany(RelevantCategory::class, 'id');
+    }
+
+    public function getIconUrlAttribute($value) 
+    {
+        $appUrl = App::make('url')->to('/');
+        return str_replace("public/", "$appUrl/storage/", $value);
     }
 }

@@ -24,6 +24,9 @@ class DatabaseSeeder extends Seeder
         //     } 
         // });
 
-        factory(App\Model\Category\Category::class, 1720)->create();
+        //factory(App\Model\Category\Category::class, 1720)->create();
+
+        //factory(App\Model\Listing\Ratings::class, 1000)->create();
+        factory(App\Model\Listing\Reviews::class, 7500)->create();
     }
 }

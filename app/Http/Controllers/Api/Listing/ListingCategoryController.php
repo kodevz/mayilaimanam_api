@@ -91,8 +91,16 @@ class ListingCategoryController extends Controller
         return 204;
     }
 
-    public function showCategoryListings(Request $request, int $id)
+    public function showCategoryListings(Request $request, string $query = null)
     {
-        return CategoryListingView::with('openingTimes','categories.relevantCategories')->where('id', $id)->get();
+        
+        if (!$query || strlen($query) <= 2) {
+            return [];
+        }
+        return CategoryListingView::with('openingTimes','categories.relevantCategories')
+                                    ->where('category_name', 'LIKE', "%$query%")
+                                    ->orWhere('title', 'LIKE', "%$query%")
+                                    ->orWhere('address', 'LIKE', "%$query%")
+                                    ->get();
     }
 }

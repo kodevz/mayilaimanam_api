@@ -17,7 +17,7 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'first_name', 'last_name', 'email', 'password',
+        'first_name', 'last_name', 'email', 'password', 'phone_no'
     ];
 
     /**
@@ -39,10 +39,13 @@ class User extends Authenticatable
     ];
 
 
+    public function getProfileImage($value)
+    {
+        return str_replace("public/", "http://192.168.43.154:8000/storage/", $value);
+    }
+
     public function roles()
     {
         return $this->belongsToMany('App\Role', 'role_user', 'user_id', 'role_id');
     }
 }
-
-
