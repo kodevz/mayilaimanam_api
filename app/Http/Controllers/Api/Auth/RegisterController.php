@@ -3,18 +3,24 @@
 namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Mail\RegistrationSuccess;
 use App\Model\Auth\OtpConfirmation;
 use App\Role;
 use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 
 class RegisterController extends Controller
 {
+    use OtpTrait;
+
     protected $request;
+
+    protected $otpText = 'You have requested to reset your password';
 
     public function __construct(Request $request)
     {
@@ -27,24 +33,7 @@ class RegisterController extends Controller
         return $this->checkIsEmailVerified($request->get('username'));
     }
 
-    public function checkIsEmailVerified($email) 
-    {
-        $user = User::where('email', $email)->first();
-
-        
-        if ( $user && $user->is_verified == 0 ) {
-            $this->sendOTP($email);
-            return [
-                'status' => false,
-                'action' => 'call_otp_verify'
-            ];
-        }
-
-        return [
-            'status' => true,
-            'action' => '',
-        ];
-    }
+    
 
     public function register(Request $request)
     {
@@ -100,7 +89,9 @@ class RegisterController extends Controller
         if ($validator->fails()) {
 
             $isEmailVerified = $this->checkIsEmailVerified($request->get('email'));
-            $this->sendOTP($request->get('email'));
+
+            $this->generateOTP($request->get('email'));
+
             return response()->json([
                 'error' => $validator->errors(),
                 'action' => $isEmailVerified['action']
@@ -114,18 +105,14 @@ class RegisterController extends Controller
 
         unset($input['otp']);
 
-        
-
         $user = User::updateOrCreate(['email' => $input['email']], $input);
 
 
         $roles = User::findOrFail($user->id)->roles();
         $roles->attach([4, 5]);
 
-        $this->sendOTP($user->email);
+        $this->generateOTP($user->email, RegistrationSuccess::class);
 
-
- 
         //$success['token'] =  $user->createToken('MAYILAIMANAM')->accessToken;
         $success['user'] =   $user;
         $success['msg'] =  'User created successfully';
@@ -133,103 +120,18 @@ class RegisterController extends Controller
         return response()->json(['success' => $success], 200);
     }
     
-    public function sendOTP($email) 
-    {
-        
-        OtpConfirmation::where('email', $email)->delete();
-
-        $otp = new OtpConfirmation();
-        $otp->otp = rand(1000, 9999);
-        $otp->email = $email;
-        $otp->save();
-
-        $this->sendOTPMail($otp);
-    }
-
-    private function sendOTPMail(OtpConfirmation $otp) 
-    {
-        $data = [
-            "otp" => $otp->otp
-        ];
-        Mail::send('otp', $data, function($message) use ($otp) {
-            $message->to('karthi.php.developer@gmail.com', 'Otp')->subject('OTP Verification');
-            $message->from('karthi.uk26@gmail.com','[QA] Test');
-        });
-    }
-
-
-    public function resendOTP(Request $request) 
-    {
-        $this->sendOTP($request->get('email'));
-
-        $user = User::where('email', $request->get('email'))->get();
-
-        if (count($user) == 0) {
-            return [
-                'status' => false,
-                'msg' => 'Email not found our system. Please check and try again later'
-            ];
-        }
-
-        return [
-            'status' => true,
-            'msg' => 'OTP Sent your email.'
-        ];
-    }
-
+  
+    /**
+     * Verify OTP
+     *
+     * @param Request $request
+     * @return void
+     */
     public function verifyOtp(Request $request)
     {
+        $response = $this->otpVerification($request);
 
-        $response = array();
-
-        $enteredOtp = $request->input('otp');
-        $email = $request->input('email');
-        $user = User::where('email', $email)->first();
-        $userId = $user->id;
-
-        if ($userId == "" || $userId == null) {
-            $response['error'] = 1;
-            $response['message'] = 'You are logged out, Login again.';
-            $response['loggedIn'] = 0;
-        } else {
-
-            $optRow = OtpConfirmation::where('email', $email)->first();
-           
-            if ($enteredOtp === $optRow->otp) {
-                
-                $user->is_verified =  1;
-                $user->save();
-                $optRow->delete();
-
-                $response['status'] = true;
-                $response['error'] = 0;
-                $response['is_verified'] = 1;
-                $response['isLoggedIn'] = 1;
-                $response['message'] = "You are verified";
-               
-            } else {
-                $response['error'] = 1;
-                $response['status'] = false;
-                $response['isVerified'] = 0;
-                $response['loggedIn'] = 1;
-                $response['message'] = "OTP does not match.";
-            }
-        }
-
-        echo json_encode($response);
+        return $response;
     }
 
-    public function resetPassword(Request $request) 
-    {
-        
-        $user = User::where('email', $request->get('email'))
-                    ->update([
-                        'password' => Hash::make($request->get('password'))
-                    ]);
-        
-        return [
-            'status' => true,
-            'msg' => 'Your password reset successfully'
-        ];
-    }
 }

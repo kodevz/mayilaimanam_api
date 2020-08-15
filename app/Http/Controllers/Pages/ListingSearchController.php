@@ -18,16 +18,27 @@ class ListingSearchController extends Controller
     {
         
         
-        if (!$query || strlen($query) <= 2) {
+        if (!$query || strlen($query) == 0) {
             return [
                 'searchListings' => [],
                 'searchCategories' => []
             ];
         }
+
+        $limit = 20;
+        $offset = $request->get('offset');
+
+        if (strlen($query) < $request->get('lastquerylen')) {
+            $limit =  $request->get('offset');
+            $offset =  0;
+        }
+
         $searchResults = collect(CategoryListingView::with('openingTimes','categories.relevantCategories')
                                     ->where('category_name', 'LIKE', "%$query%")
                                     ->orWhere('title', 'LIKE', "%$query%")
                                     ->orWhere('address', 'LIKE', "%$query%")
+                                    ->skip($offset)
+                                    ->limit($limit)
                                     ->get());
         
       
@@ -41,7 +52,8 @@ class ListingSearchController extends Controller
 
         return [
             'searchListings' => $searchListings,
-            'searchCategories' => $searchCategories
+            'searchCategories' => $searchCategories,
+            'offset' => $request->query('offset')
         ];
     }
 }

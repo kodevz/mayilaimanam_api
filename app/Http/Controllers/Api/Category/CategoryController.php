@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Api\Category;
 
 use App\Http\Controllers\Controller;
+use App\Model\Category\BusTimings;
 use App\Model\Category\Category;
+use App\Model\Category\TrainTimings;
 use App\Repositories\Category\CategoryRepositoryInterface;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Kodevz\MolyDatatable\Facades\MolyDataTable;
@@ -80,10 +83,11 @@ class CategoryController extends Controller
         $category->icon_url = null;
 
         if ($request->file('icon_url')) {
-            $category->icon_url = $request->file('icon_url')->store('public/uploads/category/icons');
+            $category->icon_url = $request->file('icon_url')->store('uploads/category/icons', ['disk' => 'public']);
+            
         }
         if ($request->file('image_url')) {
-            $category->image_url = $request->file('image_url')->store('public/uploads/category/images');
+            $category->image_url = $request->file('image_url')->store('uploads/category/images', ['disk' => 'public']);
         }
 
         $category->save();
@@ -115,12 +119,16 @@ class CategoryController extends Controller
         
         $category->name = $request['name'];
          if ($request->file('icon_url')) {
-            $category->icon_url = $request->file('icon_url')->store('public/uploads/category/icons');
+            $category->icon_url = $request->file('icon_url')->store('uploads/category/icons', ['disk' => 'public']);
+           
         }
 
         if ($request->file('image_url')) {
-            $category->image_url = $request->file('image_url')->store('public/uploads/category/images');
+            $category->image_url = $request->file('image_url')->store('uploads/category/images', ['disk' => 'public']);
         }
+
+    
+        $category->parent_id = $request->get('parent_id') != 'null' ? $request->get('parent_id') : NULL;
 
         $category->save();
         
@@ -140,7 +148,10 @@ class CategoryController extends Controller
 
         $category->delete();
 
-        return 204;
+        return [
+            'status' => TRUE,
+            'msg' => 'Record Delete Successfully'
+        ];
     }
 
     /**
@@ -154,8 +165,7 @@ class CategoryController extends Controller
         $category = Category::with('childCategories.listing','relevantCategories');
 
         $paginator = MolyDataTable::create($category)->opJson();
-
-       
+        
         return $paginator;
 
     }
@@ -185,8 +195,70 @@ class CategoryController extends Controller
 
     public function parentCategories(Request $request)
     {
-         return Category::where('parent_id', null)
-                        ->get();
+         //  return Category::where('parent_id', null)
+        //                 ->get();
+         return Category::get();
+    }
+
+    public function busTimings(Request $request)
+    {
+        $busTimings = BusTimings::select('*');
+
+
+        $request['departureFrom'] && $busTimings->where('departure_from', $request['departureFrom']);
+        $request['arrivalTo'] && $busTimings->where('arrival_to', $request['arrivalTo']);
+
+        if ($request->get('departureTime') && $request->get('arrivalTime')) {
+            $busTimings->where('departure_time', '>=' ,Carbon::parse($request['departureTime'])->format('H:i') . ':00');
+            $request->has('arrivalTime') && $busTimings->where('arrival_time', '<=', Carbon::parse($request['arrivalTime'])->format('H:i') . ':00');
+        }
+
+        return $busTimings->get();
+    }
+
+    public function busDeparturePlaces(Request $request)
+    {
+        $departurePlaces = BusTimings::groupBy('departure_from')->get();
+
+        return $departurePlaces;
+    }
+
+    public function busArrivalPlaces(Request $request)
+    {
+        $arrivalPlaces = BusTimings::groupBy('arrival_to')->get();
+
+        return $arrivalPlaces;
+    }
+
+
+    public function trainTimings(Request $request)
+    {
+        $trainTimings = TrainTimings::select('*');
+
+
+        $request['departureFrom'] && $trainTimings->where('departure_from', $request['departureFrom']);
+        $request['arrivalTo'] && $trainTimings->where('arrival_to', $request['arrivalTo']);
+
+        if ($request->get('departureTime') && $request->get('arrivalTime')) {
+            $trainTimings->where('departure_time', '>=' ,Carbon::parse($request['departureTime'])->format('H:i') . ':00');
+            $request->has('arrivalTime') && $trainTimings->where('arrival_time', '<=', Carbon::parse($request['arrivalTime'])->format('H:i') . ':00');
+        }
+        
+        return $trainTimings->get();
+    }
+
+    public function trainDeparturePlaces(Request $request)
+    {
+        $departurePlaces = TrainTimings::groupBy('departure_from')->get();
+
+        return $departurePlaces;
+    }
+
+    public function trainArrivalPlaces(Request $request)
+    {
+        $arrivalPlaces = TrainTimings::groupBy('arrival_to')->get();
+
+        return $arrivalPlaces;
     }
 
 }

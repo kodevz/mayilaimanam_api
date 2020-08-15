@@ -30,7 +30,21 @@ class CategoryListingView extends Model
 
     public function getIconUrlAttribute($value) 
     {
+       
+        if (strpos($value, 'public') === FALSE) {
+            $value = 'public/'. $value;
+        }
         $appUrl = App::make('url')->to('/');
-        return str_replace("public/", "$appUrl/storage/", $value);
+        return str_replace("public/", " $appUrl/public/storage/", $value);
+    }
+
+    public function getImageUrlAttribute($value) 
+    {
+        
+        if (strpos($value, 'public') === FALSE) {
+            $value = 'public/'. $value;
+        }
+        $appUrl = App::make('url')->to('/');
+        return str_replace("public/", " $appUrl/public/storage/", $value);
     }
 }

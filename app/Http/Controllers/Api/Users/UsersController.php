@@ -80,7 +80,7 @@ class UsersController extends Controller
 
 
         $roles = User::findOrFail($user->id)->roles();
-        $roles->attach([4, 5]);
+        $roles->attach([5]);
 
 
         $success['token'] =  $user->createToken('MAYILAIMANAM')->accessToken;
@@ -108,7 +108,7 @@ class UsersController extends Controller
             'active' => $request['active'],
         ];
         $users = User::findOrFail($id);
-        $users->roles()->sync($request->get('roles'));
+        $users->roles()->sync([5]);
         $users->update($updateData);
 
         return $users;
@@ -154,6 +154,12 @@ class UsersController extends Controller
 
     public function saveProfileInfo(Request $request)
     {
+        
+        $validate = $request->validate([
+            'profile_image' => 'required|max:500|mimes:jpeg,png',
+        ]);
+        
+
         $user = User::find($request->user()->id);
 
         $user->first_name = $request->get('first_name');

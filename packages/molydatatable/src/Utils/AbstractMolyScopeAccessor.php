@@ -21,7 +21,7 @@ abstract class AbstractMolyScopeAccessor{
      */
     public function totalRecords()
     {
-        return  (int) $this->totalRecords;
+        return  $this->totalRecords;
     }
 
 

@@ -4,10 +4,14 @@ namespace App\Model\Category;
 
 use App\Model\Listing\Listing;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\App;
 
 class Category extends Model
 {
+
+    use SoftDeletes;
+    
     protected $table = 'categories';
 
     protected $fillable = [
@@ -32,8 +36,21 @@ class Category extends Model
 
     public function getIconUrlAttribute($value) 
     {
+        if (strpos($value, 'public') === FALSE) {
+            $value = 'public/'. $value;
+        }
+       
         $appUrl = App::make('url')->to('/');
-        return str_replace("public/", "$appUrl/public/storage/", $value);
+        return str_replace("public/", " $appUrl/public/storage/", $value);
+    }
+
+    public function getImageUrlAttribute($value) 
+    {
+        if (strpos($value, 'public') === FALSE) {
+            $value = 'public/'. $value;
+        }
+        $appUrl = App::make('url')->to('/');
+        return str_replace("public/", " $appUrl/public/storage/", $value);
     }
 
 }

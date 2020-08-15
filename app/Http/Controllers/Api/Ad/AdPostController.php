@@ -64,20 +64,16 @@ class AdPostController extends Controller
                 'ad_content' => 'required|max:1000',
                 'ad_by' => 'required',
                 'ad_status' => 'required',
-                'ad_image' => 'required|max:500000|mimes:jpeg,png',
+                'ad_image' => 'required|max:500|mimes:jpeg,png',
             ]);
         }
 
         $ad = new AdPost;
-        if ($request->get('id')) {
+        if ($request->get('id') && $request->get('id') != 'null') {
             $ad = AdPost::find($request->get('id'));
         }
-
-        if (!$request->get('id')) {
-            $ad->ad_post_date = date('y-m-d');
-        }
-
-       
+        
+        $ad->ad_post_date = Carbon::parse($request->get('ad_post_date'))->format('Y-m-d');
         $ad->ad_title = $request->get('ad_title');
         $ad->ad_subtitle = $request->get('ad_subtitle');
         $ad->ad_content = $request->get('ad_content');
@@ -85,7 +81,7 @@ class AdPostController extends Controller
         $ad->ad_status = $request->get('ad_status');
      
         if ($request->file('ad_image')) {
-            $ad->ad_image = $request->file('ad_image')->store('public/uploads/ad/images');
+            $ad->ad_image = $request->file('ad_image')->store('uploads/ad/images', ['disk' => 'public']);
         }
 
         $ad->save();
@@ -161,7 +157,10 @@ class AdPostController extends Controller
 
         $ad->delete();
 
-        return $ad;
+        return [
+            'status' => TRUE,
+            'msg' => 'Record Delete Successfully'
+        ];
     }
 
     /**

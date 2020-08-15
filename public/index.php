@@ -1,14 +1,10 @@
 <?php
 
-/**
- * Laravel - A PHP Framework For Web Artisans
- *
- * @package  Laravel
- * @author   Taylor Otwell <taylor@laravel.com>
- */
-
-define('LARAVEL_START', microtime(true));
-
+// sleep(2);
+// header("Access-Control-Allow-Credentials: false");
+// header("Access-Control-Allow-Origin: *");
+// header("Access-Control-Allow-Headers: Origin, Content-Type, X-Auth-Token");
+// header("Access-Control-Allow-Methods: *");
 /*
 |--------------------------------------------------------------------------
 | Register The Auto Loader

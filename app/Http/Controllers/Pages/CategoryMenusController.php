@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Pages;
 use App\Http\Controllers\Controller;
 use App\Model\Category\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CategoryMenusController extends Controller
 {   
@@ -28,7 +29,8 @@ class CategoryMenusController extends Controller
         }
 
         if ($request->get('search')) {
-            $categoryMenus->where('name', 'LIKE', '%' . $request->get('search') . '%');
+            $search =  strtolower($request->get('search'));
+            $categoryMenus->where(DB::raw("LOWER(name)"), "LIKE", "%$search%");
         }
 
         return $categoryMenus->skip($request->get('start'))->limit($request->get('end'))->get();              

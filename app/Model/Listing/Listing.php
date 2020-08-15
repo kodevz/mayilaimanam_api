@@ -4,9 +4,13 @@ namespace App\Model\Listing;
 
 use App\Model\Category\Category;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\App;
 class Listing extends Model
 {
+
+    use SoftDeletes;
+    
     protected $table = 'listings';
 
     protected $guarded  = ['id', 'created_at', 'updated_at'];
@@ -34,6 +38,6 @@ class Listing extends Model
     public function getBannerImageAttribute($value) 
     {
         $appUrl = App::make('url')->to('/');
-        return str_replace("public/", "$appUrl/storage/", $value);
+        return str_replace("public/", " $appUrl/storage/app/public/", $value);
     }
 }

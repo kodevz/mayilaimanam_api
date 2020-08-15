@@ -169,6 +169,8 @@ class MolyDataTableFactory extends AbstractMolyScopeAccessor
      */
     public function create($items)
     {
+        $this->init($items);
+
         if ( $items instanceof \Illuminate\Database\Eloquent\Model )
         {
             $this->modelInstance($items);
@@ -473,6 +475,8 @@ class MolyDataTableFactory extends AbstractMolyScopeAccessor
 
         $data = $this->paginator->get()->toArray();
 
+        $this->withTotal();
+        
         $this->setTotalRecords();
 
         $this->setFilterRecords($data);
@@ -480,6 +484,32 @@ class MolyDataTableFactory extends AbstractMolyScopeAccessor
         return $data;
     }
 
+
+    public function withTotal($table = null) 
+    {
+        $model = null;
+
+        if ( $this->_items instanceof \Illuminate\Database\Eloquent\Builder )
+        {
+            $model = $this->_items->getModel();
+        } 
+
+        if ( $this->_items instanceof \Illuminate\Database\Eloquent\Model )
+        {
+            $model = $this->_items;
+        } 
+
+        $table = $table ? $table : $model->getTable();
+
+        $countData = DB::Select(DB::raw("Select count(id) as rowCnt FROM $table"));
+
+        if(count($countData))
+        {
+           $this->totalRecords  = $countData[0]->rowCnt;
+        }
+
+        return $this;
+    }
     
     /**
      * Set total records 
@@ -488,7 +518,12 @@ class MolyDataTableFactory extends AbstractMolyScopeAccessor
      */
     public function setTotalRecords()
     {
-        $countData = DB::Select(DB::raw("Select FOUND_ROWS() as rowsCnt"));
+
+        if ($this->totalRecords) {
+            return;
+        }
+
+        $countData = DB::Select(DB::raw("Select FOUND_ROWS() as rowsCnt;"));
 
         if(count($countData))
         {

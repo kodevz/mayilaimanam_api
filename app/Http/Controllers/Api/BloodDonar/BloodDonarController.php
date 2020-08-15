@@ -3,13 +3,14 @@
 namespace App\Http\Controllers\Api\BloodDonar;
 
 use App\Http\Controllers\Controller;
+use App\Mail\BloodDonorRegister;
 use App\Model\BloodDonar\BloodDonar;
 use App\Model\BloodDonar\BloodDonarsView;
 use App\Model\BloodDonar\BloodGroup;
 use App\Model\Listing\Listing;
 use Illuminate\Http\Request;
 use Kodevz\MolyDatatable\Facades\MolyDataTable;
-
+use Illuminate\Support\Facades\Mail;
 class BloodDonarController extends Controller
 {
     /**
@@ -55,6 +56,17 @@ class BloodDonarController extends Controller
     public function show(int $id) : BloodDonar
     {
         return BloodDonar::find($id);
+    }
+
+    /**
+     * Show the single category by id
+     *
+     * @param int $id
+     * @return void
+     */
+    public function showByUserId(int $id) : ?BloodDonar
+    {
+        return BloodDonar::withTrashed()->where('mm_user_id', $id)->first();
     }
 
     /**
@@ -125,11 +137,28 @@ class BloodDonarController extends Controller
             $donar->donar_code = 'MMBLDDO/'.date('Y/m/d') . '/' . $donar->id;
             $donar->save();
         }
-   
+
+        Mail::to($user->email)->send(new BloodDonorRegister);
+       
         return [
             'msg' => "Successfully register your blood donar request. Mayilaimanam will be verify soon.",
             'status' => true
         ];
+    }
+
+    public function unRegister(Request $request) 
+    {
+        $donar = BloodDonar::withTrashed()->find($request['id']);
+
+        if (is_null($donar->deleted_at)) {
+            $donar->delete();
+        } else {
+            $donar->fill(['deleted_at' => null]);
+            $donar->save();
+        }
+        
+
+        return $this->showByUserId($donar->mm_user_id);
     }
 
     /**
@@ -159,7 +188,10 @@ class BloodDonarController extends Controller
 
         $category->delete();
 
-        return 204;
+        return [
+            'status' => TRUE,
+            'msg' => 'Record Delete Successfully'
+        ];
     }
 
 
@@ -171,8 +203,45 @@ class BloodDonarController extends Controller
         //     $categoryIds[] = $request->get('parent_id');
         // }
         
-        $bloodDonars = BloodDonarsView::where('status', 'Verified')->orderBy('id', 'DESC');
+        $bloodDonars = BloodDonarsView::whereIn('status', ['Verified', 'Active']);
+        if ($request->has('blood_group_id')) {
+            $bloodDonars->where('blood_group_id', $request->get('blood_group_id'));
+        }
+
+        if ($request->has('place')) {
+            $place = $request->get('place');
+            $bloodDonars->where('address', 'LIKE', "%$place%");
+        }
+
+        if ($request->get('search')) {
+            $search = $request->get('search');
+
+           
+            $bloodDonars->where(function ($query) use ($search) {
+                        $query->where('donar_name', 'LIKE', "%$search%")
+                            ->orWhere('phone_number', 'LIKE', "%$search%")
+                            ->orWhere('blood_group', 'LIKE', "%$search%");
+                    });
+            
+        }
+        
+        $bloodDonars->orderBy('id', 'DESC');
 
         return $bloodDonars->skip($request->get('start'))->limit($request->get('end'))->get();
+    }
+
+    public function donarsArea() 
+    {
+        return [
+            'Mayiladuthurai',
+            'Karaikal',
+            'Sirkazhi',
+            'Chidambaram',
+            'Kumbakonam',
+            'Nagapattinam',
+            'Poraiyar',
+            'Thanjure',
+            'Thiruvarur'
+        ];
     }
 }

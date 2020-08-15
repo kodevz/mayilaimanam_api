@@ -41,7 +41,7 @@ class User extends Authenticatable
 
     public function getProfileImage($value)
     {
-        return str_replace("public/", "http://192.168.43.154:8000/storage/", $value);
+        return str_replace("public/", "http://mayilaimanam.shaorganic.com/storage/app/public/", $value);
     }
 
     public function roles()

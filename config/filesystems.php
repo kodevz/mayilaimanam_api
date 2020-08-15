@@ -50,7 +50,7 @@ return [
 
         'public' => [
             'driver' => 'local',
-            'root' => storage_path('app/public'),
+             'root' => public_path('storage'),
             'url' => env('APP_URL').'/storage',
             //'url' => 'http://192.168.43.154/laravel6/mm/storage',
             'visibility' => 'public',

@@ -5,6 +5,7 @@ namespace App\Model\Ad;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\App;
 
 class AdPost extends Model
 {
@@ -21,8 +22,11 @@ class AdPost extends Model
 
     public function getAdImageAttribute($value) 
     {
-        return str_replace("public/", "http://192.168.43.154:8000/storage/", $value);
+        if (strpos($value, 'public') === FALSE) {
+            $value = 'public/'. $value;
+        }
+       
+        $appUrl = App::make('url')->to('/');
+        return str_replace("public/", "$appUrl/public/storage/", $value);
     }
-
-    
 }

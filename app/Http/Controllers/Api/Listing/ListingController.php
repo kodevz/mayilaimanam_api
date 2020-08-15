@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Listing;
 use App\Http\Controllers\Controller;
 use App\Model\Category\CategoryListingView;
 use App\Model\Listing\Listing;
+use App\Model\Listing\ListingView;
 use App\Model\Listing\ListingCategory;
 use App\Model\Listing\OpeningTimes;
 use DateTime;
@@ -33,7 +34,7 @@ class ListingController extends Controller
     public function index(Request $request)
     {   
 
-        $listing = Listing::with('listingCategory.category', 'openingTimes');
+        $listing = ListingView::with('listingCategory.category', 'openingTimes');
 
         return MolyDataTable::create($listing)->opJson();
     }
@@ -57,31 +58,32 @@ class ListingController extends Controller
      */
     public function create(Request $request)
     {   
+        
         if (!$request->get('id')) {
 
              $validate = $request->validate([
                 'title' => 'required|max:75',
-                'short_description' => 'required|max:75',
-                'slug' => '',
-                'since' => 'required',
+                // 'short_description' => '',
+                // 'slug' => '',
+                // 'since' => '',
                 'category_id' => 'required',
-                'door_no' => 'required',
-                'address_line_1' => 'required',
-                'city' => 'required',
-                'state' => 'required',
-                'country' => 'required',
-                'zipcode' => 'required',
-                'description' => '',
-                'mobile_no' => 'required|regex:/[0-9]{9}/',
-                'telephone_no' => '',
-                'phone_afterhours' => 'required',
-                'business_mail' => '',
-                'latitude' => '',
-                'longitude' => '',
-                'website' => '',
-                'facebook' => '',
-                'twitter' => '',
-                'google_map_url' => '',
+                // 'door_no' => 'required',
+                // 'address_line_1' => 'required',
+                // 'city' => 'required',
+                // 'state' => 'required',
+                // 'country' => 'required',
+                // 'zipcode' => 'required',
+                //'description' => '',
+                //'mobile_no' => 'required|regex:/[0-9]{9}/',
+                //'telephone_no' => '',
+                //'phone_afterhours' => 'required',
+                //'business_mail' => '',
+                //'latitude' => '',
+                //'longitude' => '',
+                //'website' => '',
+                //'facebook' => '',
+                //'twitter' => '',
+                //'google_map_url' => '',
                 'opening_times' => 'required | array',
                 'opening_times.*.weekday' => 'required|nullable|regex:/^[a-zA-Z]+$/u',
             ]);
@@ -126,23 +128,26 @@ class ListingController extends Controller
         $listing->twitter = $request->get('twitter');
         $listing->google_map_url = $request->get('google_map_url');
         $listing->status = $request->get('status');
+        $listing->is_verified = $request->get('is_verified');
         $listing->save();
 
+       
         if ($listing->id) {
-
-            foreach ($request->get('opening_times') as $otime) {
-                $openTime = new OpeningTimes;
-
-                if ($otime['id']) {
-                    $openTime =  OpeningTimes::find($otime['id']);
+            if (count($request->get('opening_times'))) {
+                foreach ($request->get('opening_times') as $otime) {
+                    $openTime = new OpeningTimes;
+    
+                    if ($otime['id']) {
+                        $openTime =  OpeningTimes::find($otime['id']);
+                    }
+    
+                    $openTime->listing_id = $listing->id;
+                    $openTime->weekday = $otime['weekday'];
+                    $openTime->start = $otime['start'];
+                    $openTime->end = $otime['end'];
+                    $openTime->holiday = false;
+                    $openTime->save();
                 }
-
-                $openTime->listing_id = $listing->id;
-                $openTime->weekday = $otime['weekday'];
-                $openTime->start = $otime['start'];
-                $openTime->end = $otime['end'];
-                $openTime->holiday = $otime['holiday'];
-                $openTime->save();
             }
         }
 
@@ -177,7 +182,10 @@ class ListingController extends Controller
 
         $category->delete();
 
-        return 204;
+        return [
+            'status' => TRUE,
+            'msg' => 'Record Delete Successfully'
+        ];
     }
 
     /**
@@ -185,9 +193,9 @@ class ListingController extends Controller
      *
      * @return array
      */
-    public function myListings() : array
+    public function myListings()
     {
-         return Listing::with('listingCategory.category', 'openingTimes')-where('user_id', Auth::user()->id)->get();
+         return Listing::with('listingCategory.category', 'openingTimes')->where('user_id', Auth::user()->id)->get();
     }
 
 

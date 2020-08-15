@@ -23,7 +23,7 @@ Route::namespace('Api\Auth')->group(function () {
     Route::post('verify-otp', 'RegisterController@verifyOtp')->name('api.verifyOtp');
     Route::post('resend-otp', 'RegisterController@resendOTP')->name('api.resendOTP');
     Route::post('email-verify', 'RegisterController@isEmailVerified')->name('api.isEmailVerified');
-    Route::post('forget-password', 'RegisterController@resetPassword')->name('api.resetPassword');
+    Route::post('forget-password', 'ResetPasswordController@resetPassword')->name('api.resetPassword');
 });
 
 
@@ -47,6 +47,7 @@ Route::middleware(['auth:api'])->group(function () {
         Route::get('category/search', 'CategoryController@searchCategory');
         Route::post('category/create', 'CategoryController@create');
         Route::post('category/{id}/update', 'CategoryController@update');
+        Route::get('category/{id}/delete', 'CategoryController@delete');
 
         Route::get('category/parent-categories', 'CategoryController@parentCategories');
         Route::get('category/parent/{id?}', 'CategoryController@showCategories');
@@ -62,6 +63,7 @@ Route::middleware(['auth:api'])->group(function () {
         Route::get('listing/my/all', 'ListingController@myListings');
         Route::post('listing/create', 'ListingController@create');
         Route::post('listing/{id}/update', 'ListingController@update');
+        Route::get('listing/{id}/delete', 'ListingController@delete');
 
         Route::get('listing-category/all', 'ListingCategoryController@index');
         Route::get('listing-category/show/{id}', 'ListingCategoryController@show');
@@ -85,6 +87,8 @@ Route::middleware(['auth:api'])->group(function () {
         Route::post('blood-donar/create', 'BloodDonarController@create');
         Route::post('blood-donar/register', 'BloodDonarController@register');
         Route::post('blood-donar/{id}/update', 'BloodDonarController@update');
+        Route::get('blood-donar/{id}/delete', 'BloodDonarController@delete');
+        Route::put('blood-donar/unregister', 'BloodDonarController@unRegister');
         Route::get('blood-groups/all', 'BloodDonarController@bloodGroups');
     });
 
@@ -107,5 +111,11 @@ Route::middleware(['auth:api'])->group(function () {
         Route::post('users/{id}/update', 'UsersController@update');
         Route::get('users/list/{id?}', 'UsersController@showUsers');
         Route::post('users/profile-info', 'UsersController@saveProfileInfo');
+    });
+
+    
+    Route::namespace('Api\Common')->group(function () {
+        Route::put('common/listing/give-rating', 'CommonController@giveListingRating');
+        Route::post('common/listing/get-rating', 'CommonController@getRatingForListing');
     });
 });
