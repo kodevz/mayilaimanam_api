@@ -138,7 +138,7 @@ class BloodDonarController extends Controller
             $donar->save();
         }
 
-        Mail::to($user->email)->send(new BloodDonorRegister);
+        //Mail::to($user->email)->send(new BloodDonorRegister);
        
         return [
             'msg' => "Successfully register your blood donar request. Mayilaimanam will be verify soon.",

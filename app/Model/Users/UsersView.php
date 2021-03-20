@@ -3,9 +3,12 @@
 namespace App\Model\Users;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class UsersView extends Model
 {
+    
+
     protected $table = 'users_view';
 
     public function modalData() 

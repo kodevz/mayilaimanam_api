@@ -36,7 +36,7 @@ class ResetPasswordController extends RegisterController
                     ->update([
                         'password' => Hash::make($request->get('password'))
                     ]);
-        Mail::to($request->get('email'))->send(new ResetPasswordSuccess());
+        //Mail::to($request->get('email'))->send(new ResetPasswordSuccess());
 
         return [
             'status' => true,

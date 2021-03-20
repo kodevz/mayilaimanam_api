@@ -88,13 +88,12 @@ class RegisterController extends Controller
         
         if ($validator->fails()) {
 
-            $isEmailVerified = $this->checkIsEmailVerified($request->get('email'));
+            // $isEmailVerified = $this->checkIsEmailVerified($request->get('email'));
 
-            $this->generateOTP($request->get('email'));
+            // $this->generateOTP($request->get('email'));
 
             return response()->json([
-                'error' => $validator->errors(),
-                'action' => $isEmailVerified['action']
+                'error' => $validator->errors()
             ], 401);
            
         }
@@ -102,6 +101,7 @@ class RegisterController extends Controller
         $input = $request->all();
 
         $input['password'] = Hash::make($input['password']);
+        $input['is_verified'] = 1;
 
         unset($input['otp']);
 
@@ -111,13 +111,10 @@ class RegisterController extends Controller
         $roles = User::findOrFail($user->id)->roles();
         $roles->attach([4, 5]);
 
-        $this->generateOTP($user->email, RegistrationSuccess::class);
-
-        //$success['token'] =  $user->createToken('MAYILAIMANAM')->accessToken;
         $success['user'] =   $user;
-        $success['msg'] =  'User created successfully';
+        $success['msg'] =  'Your are register successfully';
 
-        return response()->json(['success' => $success], 200);
+        return response()->json($success, 200);
     }
     
   

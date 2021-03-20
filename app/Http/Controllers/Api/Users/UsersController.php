@@ -7,7 +7,9 @@ use App\Model\Category\Category;
 use App\Model\Users\UsersView;
 use App\User;
 use App\Repositories\Category\CategoryRepositoryInterface;
+use App\Role;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Kodevz\MolyDatatable\Facades\MolyDataTable;
@@ -65,6 +67,7 @@ class UsersController extends Controller
             'first_name' => 'required',
             'last_name' => 'required',
             'password' => 'required',
+            'roles' => 'required',
             'c_password' => 'required|same:password',
         ]);
 
@@ -74,13 +77,16 @@ class UsersController extends Controller
 
         $input = $request->all();
 
+        $rolesId = $input['roles'];
+
+        unset($input['roles']);
+
         $input['password'] = bcrypt($input['password']);
 
         $user = User::updateOrCreate(['email' => $input['email']], $input);
 
-
         $roles = User::findOrFail($user->id)->roles();
-        $roles->attach([5]);
+        $roles->attach($rolesId);
 
 
         $success['token'] =  $user->createToken('MAYILAIMANAM')->accessToken;
@@ -123,11 +129,24 @@ class UsersController extends Controller
      */
     public function delete(Request $request, int $id)
     {
-        $category = User::findOrFail($id);
+        $authUser = Auth::user();
+    
+        if ($authUser->id === $id) {
+            return [
+                'status' => false,
+                'msg' => 'Login user and delete request user same.'
+            ];
+        }
 
-        $category->delete();
+        $user = User::findOrFail($id);
 
-        return 204;
+        $user->delete();
+
+        return [
+            'status' => true,
+            'code' => 204,
+            'msg' => 'Successfully Deleted'
+        ];
     }
 
     /**
@@ -180,5 +199,10 @@ class UsersController extends Controller
         ];
     }
 
+
+    public function getRoles() 
+    {
+        return Role::all();
+    }
     
 }

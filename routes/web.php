@@ -14,6 +14,8 @@
 use App\Mail\SendOTP;
 use App\Model\Auth\OtpConfirmation;
 use App\Model\Category\Category;
+use App\Model\Listing\ListingView;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\View;
 
@@ -21,6 +23,10 @@ Route::get('/', function () {
     //View::addExtension('html', 'php');
 
     return View::make('welcome');
+});
+
+Route::get('/test', function() {
+    return $listing = ListingView::with('listingCategory.category', 'openingTimes')->get();
 });
 
 Route::get('/create-admin', function () {
@@ -34,6 +40,7 @@ Route::get('/create-admin', function () {
 Route::get('/mail', function () {
     $data = array('otp'=>"2346");
 
+    return Hash::make('admin');
     
     $optRow = OtpConfirmation::where('email', "karthi.php.developer@gmail.com")->first();
 
@@ -68,6 +75,8 @@ Route::group(['middleware' => ['web']], function () {
     Route::get('sub-category-menus', 'Pages\CategoryMenusController@subCategoryMenus');
 
     Route::get('listing/{query}/search', 'Pages\ListingSearchController@searchListings');
+
+    Route::get('user/roles', 'Api\Users\UsersController@getRoles');
 });
 
 

@@ -108,6 +108,7 @@ Route::middleware(['auth:api'])->group(function () {
         Route::post('users/all', 'UsersController@index');
         Route::get('users/show/{id}', 'UsersController@show');
         Route::post('users/create', 'UsersController@create');
+        Route::delete('users/{id}/delete', 'UsersController@delete');
         Route::post('users/{id}/update', 'UsersController@update');
         Route::get('users/list/{id?}', 'UsersController@showUsers');
         Route::post('users/profile-info', 'UsersController@saveProfileInfo');

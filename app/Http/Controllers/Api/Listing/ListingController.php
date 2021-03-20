@@ -35,7 +35,7 @@ class ListingController extends Controller
     {   
 
         $listing = ListingView::with('listingCategory.category', 'openingTimes');
-
+        
         return MolyDataTable::create($listing)->opJson();
     }
     
